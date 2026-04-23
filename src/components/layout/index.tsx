@@ -1,0 +1,136 @@
+import { Link, useLocation } from 'react-router-dom';
+import { LayoutGrid, MessageSquare, GitPullRequest, Settings } from 'lucide-react';
+
+const nav = [
+  { to: '/', icon: LayoutGrid, label: 'Projects' },
+  { to: '/prompt', icon: MessageSquare, label: 'Prompt' },
+  { to: '/changes', icon: GitPullRequest, label: 'Changes' },
+];
+
+export function Sidebar() {
+  const { pathname } = useLocation();
+
+  return (
+    <aside style={{
+      width: 'var(--sidebar-width)',
+      height: '100vh',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      background: 'var(--bg-elevated)',
+      borderRight: '1px solid var(--border)',
+      display: 'flex',
+      flexDirection: 'column',
+      zIndex: 100,
+    }}>
+      {/* Logo */}
+      <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{
+            width: 24,
+            height: 24,
+            background: 'var(--text-primary)',
+            borderRadius: 5,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M2 10L6 2L10 10M3.5 7.5h5" stroke="var(--bg)" strokeWidth="1.4" strokeLinecap="round" />
+            </svg>
+          </div>
+          <span style={{ fontWeight: 600, fontSize: 13, letterSpacing: '-0.01em' }}>AI Editor</span>
+        </div>
+      </div>
+
+      {/* Nav */}
+      <nav style={{ padding: '8px 8px', flex: 1 }}>
+        {nav.map(({ to, icon: Icon, label }) => {
+          const active = pathname === to || (to !== '/' && pathname.startsWith(to));
+          return (
+            <Link
+              key={to}
+              to={to}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '7px 10px',
+                borderRadius: 'var(--radius-md)',
+                color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
+                background: active ? 'var(--bg-sunken)' : 'transparent',
+                fontWeight: active ? 500 : 400,
+                fontSize: 13,
+                transition: 'all 0.1s',
+                marginBottom: 1,
+              }}
+            >
+              <Icon size={14} strokeWidth={active ? 2 : 1.5} />
+              {label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Footer */}
+      <div style={{ padding: '12px 8px', borderTop: '1px solid var(--border)' }}>
+        <Link
+          to="/settings"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '7px 10px',
+            borderRadius: 'var(--radius-md)',
+            color: 'var(--text-secondary)',
+            fontSize: 13,
+          }}
+        >
+          <Settings size={14} strokeWidth={1.5} />
+          Settings
+        </Link>
+      </div>
+    </aside>
+  );
+}
+
+export function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ display: 'flex', height: '100%' }}>
+      <Sidebar />
+      <main style={{
+        marginLeft: 'var(--sidebar-width)',
+        flex: 1,
+        height: '100vh',
+        overflow: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        {children}
+      </main>
+    </div>
+  );
+}
+
+export function PageHeader({ title, description, action }: {
+  title: string;
+  description?: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div style={{
+      padding: '28px 32px 20px',
+      borderBottom: '1px solid var(--border)',
+      display: 'flex',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      gap: 16,
+    }}>
+      <div>
+        <h1 style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.02em', marginBottom: description ? 3 : 0 }}>{title}</h1>
+        {description && <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{description}</p>}
+      </div>
+      {action && <div style={{ flexShrink: 0 }}>{action}</div>}
+    </div>
+  );
+}
