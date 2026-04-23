@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Github, Trash2, ArrowRight, GitBranch, FolderOpen } from 'lucide-react';
+import { Plus, Globe, Trash2, ArrowRight, GitBranch, FolderOpen } from 'lucide-react';
 import { Layout, PageHeader } from '../components/layout';
 import { Button, Input, Badge, Card, Empty, Toast, Spinner } from '../components/ui';
-import { api, Project } from '../lib/api';
+import { api } from '../lib/api';
+import type { Project } from '../lib/api';
 
 export default function ProjectsPage() {
   const navigate = useNavigate();
@@ -150,7 +151,7 @@ export default function ProjectsPage() {
                     justifyContent: 'center',
                     flexShrink: 0,
                   }}>
-                    <Github size={16} color="var(--text-secondary)" />
+                    <Globe size={16} color="var(--text-secondary)" />
                   </div>
                   <div style={{ minWidth: 0 }}>
                     <p style={{ fontWeight: 600, fontSize: 13, marginBottom: 2 }}>{p.name}</p>

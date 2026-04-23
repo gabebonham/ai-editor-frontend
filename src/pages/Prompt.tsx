@@ -3,7 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import { Send, CheckCircle, XCircle, ChevronDown, ChevronRight, FileCode, Zap, AlertTriangle } from 'lucide-react';
 import { Layout, PageHeader } from '../components/layout';
 import { Button, Badge, Card, Empty, Toast, Spinner } from '../components/ui';
-import { api, Project } from '../lib/api';
+import { api } from '../lib/api';
+import type { Project } from '../lib/api';
 
 interface Message {
   id: string;
