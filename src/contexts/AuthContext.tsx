@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { getToken, setToken as persistToken, clearToken, setOnUnauthorized } from '../lib/api';
 import type { User } from '../lib/api';
 import { api } from '../lib/api';
