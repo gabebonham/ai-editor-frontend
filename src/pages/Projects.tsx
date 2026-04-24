@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus, Globe, Trash2, ArrowRight, GitBranch,
-  FolderOpen, Github, Zap, CheckCircle,
+  FolderOpen, GitFork, Zap, CheckCircle,
 } from 'lucide-react';
 import { Layout, PageHeader } from '../components/layout';
 import { Button, Input, Badge, Card, Empty, Toast, Spinner } from '../components/ui';
@@ -247,7 +247,7 @@ function ProjectCard({
       >
         {/* GitHub OAuth link */}
         <Button variant="ghost" size="sm" onClick={onConnectGitHub} title="Authorize GitHub access for this project">
-          <Github size={12} /> Connect GitHub
+          <GitFork size={12} /> Connect GitHub
         </Button>
 
         {/* Widget injection */}
