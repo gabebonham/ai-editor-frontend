@@ -107,16 +107,34 @@ export default function ProjectsPage() {
               />
               <Input
                 label="GitHub owner"
-                placeholder="acme-corp"
+                placeholder="acme-corp or paste GitHub URL"
                 value={form.githubOwner}
-                onChange={(e) => setForm({ ...form, githubOwner: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value.trim();
+                  const match = val.match(/github\.com\/([^/]+)/);
+                  if (match) {
+                    // If user pasted a full URL, split owner and repo automatically
+                    const repoMatch = val.match(/github\.com\/([^/]+)\/([^/]+?)(\.git)?\s*$/);
+                    setForm({
+                      ...form,
+                      githubOwner: match[1],
+                      githubRepo: repoMatch ? repoMatch[2] : form.githubRepo,
+                    });
+                  } else {
+                    setForm({ ...form, githubOwner: e.target.value });
+                  }
+                }}
                 error={errors.githubOwner}
               />
               <Input
                 label="Repository"
-                placeholder="my-repo"
+                placeholder="my-repo or paste GitHub URL"
                 value={form.githubRepo}
-                onChange={(e) => setForm({ ...form, githubRepo: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value.trim();
+                  const match = val.match(/github\.com\/[^/]+\/([^/]+?)(\.git)?\s*$/);
+                  setForm({ ...form, githubRepo: match ? match[1] : e.target.value });
+                }}
                 error={errors.githubRepo}
               />
             </div>
