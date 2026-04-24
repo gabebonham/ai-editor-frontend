@@ -31,8 +31,6 @@ export function isAuthenticated(): boolean {
 // ── HTTP client ───────────────────────────────────────────────────────────────
 
 type RequestOptions = RequestInit & {
-  // When true, a 401 response does NOT clear the token or trigger logout.
-  // Use for optional/display-only endpoints where auth failure is non-critical.
   silent401?: boolean;
 };
 
@@ -136,6 +134,30 @@ export interface SaveExplorationPayload {
   htmlSnapshot?: string;
 }
 
+// ── Widget / Snippet types ────────────────────────────────────────────────────
+
+export interface FileChangeDiff {
+  path: string;
+  original: string;
+  modified: string;
+  description: string;
+}
+
+export interface WidgetPreviewResult {
+  projectId: string;
+  widgetCode: string;
+  scriptTag: string;
+  files: FileChangeDiff[];
+}
+
+export interface WidgetInjectResult {
+  projectId: string;
+  prUrl: string;
+  prNumber: number;
+  branch: string;
+  filesChanged: string[];
+}
+
 // ── API ───────────────────────────────────────────────────────────────────────
 
 export const api = {
@@ -205,20 +227,26 @@ export const api = {
   // ── GitHub OAuth ───────────────────────────────────────────────────────────
 
   github: {
-    authorizeUrl: () => `${BASE}/github/oauth/authorize`,
+    // Pass projectId so the OAuth callback can link the token to the project automatically
+    authorizeUrl: (projectId?: string) => {
+      const base = `${BASE}/github/oauth/authorize`;
+      return projectId ? `${base}?projectId=${encodeURIComponent(projectId)}` : base;
+    },
   },
 
-  // ── Snippet ────────────────────────────────────────────────────────────────
+  // ── Snippet / Widget ───────────────────────────────────────────────────────
 
   snippet: {
+    // Step 1 — Generate widget + diff WITHOUT creating a PR (for review screen)
+    preview: (projectId: string, cdnUrl?: string) =>
+      request<WidgetPreviewResult>('/snippet/preview', {
+        method: 'POST',
+        body: JSON.stringify({ projectId, ...(cdnUrl ? { cdnUrl } : {}) }),
+      }),
+
+    // Step 2 — Actually create the PR after user approves the preview
     inject: (projectId: string, cdnUrl?: string) =>
-      request<{
-        projectId: string;
-        prUrl: string;
-        prNumber: number;
-        branch: string;
-        filesChanged: string[];
-      }>('/snippet/inject', {
+      request<WidgetInjectResult>('/snippet/inject', {
         method: 'POST',
         body: JSON.stringify({ projectId, ...(cdnUrl ? { cdnUrl } : {}) }),
       }),

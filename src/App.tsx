@@ -7,6 +7,7 @@ import ProjectsPage from './pages/Projects';
 import PromptPage from './pages/Prompt';
 import ChangesPage from './pages/Changes';
 import SettingsPage from './pages/Settings';
+import WidgetPreviewPage from './pages/WidgetPreview';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuth } = useAuth();
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/prompt" element={<ProtectedRoute><PromptPage /></ProtectedRoute>} />
           <Route path="/changes" element={<ProtectedRoute><ChangesPage /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+          <Route path="/widget-preview" element={<ProtectedRoute><WidgetPreviewPage /></ProtectedRoute>} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

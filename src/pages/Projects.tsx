@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Globe, Trash2, ArrowRight, GitBranch, FolderOpen } from 'lucide-react';
+import {
+  Plus, Globe, Trash2, ArrowRight, GitBranch,
+  FolderOpen, Github, Zap, CheckCircle,
+} from 'lucide-react';
 import { Layout, PageHeader } from '../components/layout';
 import { Button, Input, Badge, Card, Empty, Toast, Spinner } from '../components/ui';
 import { api } from '../lib/api';
@@ -57,6 +60,18 @@ export default function ProjectsPage() {
     } catch (err) {
       setToast({ message: (err as Error).message, type: 'error' });
     }
+  };
+
+  // Redirect to GitHub OAuth — encodes projectId so the callback links the token
+  const handleConnectGitHub = (projectId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.location.href = api.github.authorizeUrl(projectId);
+  };
+
+  // Navigate to the widget preview/diff page for this project
+  const handleInjectWidget = (projectId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/widget-preview?project=${projectId}`);
   };
 
   return (
@@ -127,65 +142,14 @@ export default function ProjectsPage() {
         ) : (
           <div style={{ display: 'grid', gap: 10 }}>
             {projects.map((p) => (
-              <Card
+              <ProjectCard
                 key={p.id}
-                style={{
-                  padding: '16px 20px',
-                  cursor: 'pointer',
-                  transition: 'border-color 0.12s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 16,
-                }}
-                onClick={() => navigate(`/prompt?project=${p.id}`)}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
-                  <div style={{
-                    width: 36,
-                    height: 36,
-                    background: 'var(--bg-elevated)',
-                    borderRadius: 'var(--radius-md)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                  }}>
-                    <Globe size={16} color="var(--text-secondary)" />
-                  </div>
-                  <div style={{ minWidth: 0 }}>
-                    <p style={{ fontWeight: 600, fontSize: 13, marginBottom: 2 }}>{p.name}</p>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {p.githubOwner}/{p.githubRepo}
-                    </p>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                  <Badge variant="default">
-                    <GitBranch size={10} style={{ marginRight: 3 }} />
-                    {p.defaultBranch}
-                  </Badge>
-                  <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
-                    {new Date(p.createdAt).toLocaleDateString()}
-                  </span>
-                  <button
-                    onClick={(e) => handleDelete(p.id, e)}
-                    style={{
-                      padding: 4,
-                      borderRadius: 'var(--radius-sm)',
-                      color: 'var(--text-tertiary)',
-                      transition: 'color 0.1s',
-                      display: 'flex',
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent)')}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-tertiary)')}
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                  <ArrowRight size={13} color="var(--text-tertiary)" />
-                </div>
-              </Card>
+                project={p}
+                onOpen={() => navigate(`/prompt?project=${p.id}`)}
+                onDelete={(e) => handleDelete(p.id, e)}
+                onConnectGitHub={(e) => handleConnectGitHub(p.id, e)}
+                onInjectWidget={(e) => handleInjectWidget(p.id, e)}
+              />
             ))}
           </div>
         )}
@@ -193,5 +157,111 @@ export default function ProjectsPage() {
 
       {toast && <Toast message={toast.message} type={toast.type} onDismiss={() => setToast(null)} />}
     </Layout>
+  );
+}
+
+// ── ProjectCard ───────────────────────────────────────────────────────────────
+
+function ProjectCard({
+  project: p,
+  onOpen,
+  onDelete,
+  onConnectGitHub,
+  onInjectWidget,
+}: {
+  project: Project;
+  onOpen: () => void;
+  onDelete: (e: React.MouseEvent) => void;
+  onConnectGitHub: (e: React.MouseEvent) => void;
+  onInjectWidget: (e: React.MouseEvent) => void;
+}) {
+  return (
+    <Card
+      style={{
+        padding: '16px 20px',
+        cursor: 'pointer',
+        transition: 'border-color 0.12s',
+      }}
+      onClick={onOpen}
+    >
+      {/* Top row: icon + name + branch + date + delete + open */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div style={{
+          width: 36,
+          height: 36,
+          background: 'var(--bg-elevated)',
+          borderRadius: 'var(--radius-md)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}>
+          <Globe size={16} color="var(--text-secondary)" />
+        </div>
+
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <p style={{ fontWeight: 600, fontSize: 13, marginBottom: 2 }}>{p.name}</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {p.githubOwner}/{p.githubRepo}
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          <Badge variant="default">
+            <GitBranch size={10} style={{ marginRight: 3 }} />
+            {p.defaultBranch}
+          </Badge>
+          <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
+            {new Date(p.createdAt).toLocaleDateString()}
+          </span>
+          <button
+            onClick={onDelete}
+            title="Delete project"
+            style={{
+              padding: 4,
+              borderRadius: 'var(--radius-sm)',
+              color: 'var(--text-tertiary)',
+              transition: 'color 0.1s',
+              display: 'flex',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent)')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-tertiary)')}
+          >
+            <Trash2 size={13} />
+          </button>
+          <ArrowRight size={13} color="var(--text-tertiary)" />
+        </div>
+      </div>
+
+      {/* Bottom row: GitHub + widget actions */}
+      <div
+        style={{
+          marginTop: 12,
+          paddingTop: 12,
+          borderTop: '1px solid var(--border)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* GitHub OAuth link */}
+        <Button variant="ghost" size="sm" onClick={onConnectGitHub} title="Authorize GitHub access for this project">
+          <Github size={12} /> Connect GitHub
+        </Button>
+
+        {/* Widget injection */}
+        {p.snippetInjected ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--green)' }}>
+            <CheckCircle size={12} />
+            Widget injected
+          </div>
+        ) : (
+          <Button variant="primary" size="sm" onClick={onInjectWidget} title="Generate and inject the chat widget into this repo">
+            <Zap size={12} /> Inject chat widget
+          </Button>
+        )}
+      </div>
+    </Card>
   );
 }
