@@ -1,5 +1,8 @@
-import { Link, useLocation } from 'react-router-dom';
-import { LayoutGrid, MessageSquare, GitPullRequest, Settings } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { LayoutGrid, MessageSquare, GitPullRequest, Settings, LogOut } from 'lucide-react';
+import { api, clearToken } from '../../lib/api';
+import type { User } from '../../lib/api';
 
 const nav = [
   { to: '/', icon: LayoutGrid, label: 'Projects' },
@@ -9,6 +12,18 @@ const nav = [
 
 export function Sidebar() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    api.auth.me().then(setUser).catch(() => null);
+  }, []);
+
+  const handleLogout = async () => {
+    try { await api.auth.logout(); } catch { /* best-effort */ }
+    clearToken();
+    navigate('/login');
+  };
 
   return (
     <aside style={{
@@ -73,7 +88,7 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div style={{ padding: '12px 8px', borderTop: '1px solid var(--border)' }}>
+      <div style={{ padding: '12px 8px', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 2 }}>
         <Link
           to="/settings"
           style={{
@@ -82,13 +97,61 @@ export function Sidebar() {
             gap: 8,
             padding: '7px 10px',
             borderRadius: 'var(--radius-md)',
-            color: 'var(--text-secondary)',
+            color: pathname === '/settings' ? 'var(--text-primary)' : 'var(--text-secondary)',
+            background: pathname === '/settings' ? 'var(--bg-sunken)' : 'transparent',
             fontSize: 13,
           }}
         >
           <Settings size={14} strokeWidth={1.5} />
           Settings
         </Link>
+
+        {/* User + logout */}
+        {user && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '7px 10px',
+            marginTop: 2,
+          }}>
+            <div style={{
+              width: 20,
+              height: 20,
+              borderRadius: '50%',
+              background: 'var(--bg-sunken)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 10,
+              fontWeight: 600,
+              color: 'var(--text-secondary)',
+              flexShrink: 0,
+            }}>
+              {user.email[0].toUpperCase()}
+            </div>
+            <span style={{ fontSize: 11, color: 'var(--text-tertiary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {user.email}
+            </span>
+            <button
+              onClick={handleLogout}
+              title="Sign out"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                color: 'var(--text-tertiary)',
+                padding: 2,
+                borderRadius: 'var(--radius-sm)',
+                transition: 'color 0.1s',
+                flexShrink: 0,
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent)')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-tertiary)')}
+            >
+              <LogOut size={12} />
+            </button>
+          </div>
+        )}
       </div>
     </aside>
   );
