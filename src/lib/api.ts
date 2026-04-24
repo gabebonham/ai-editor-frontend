@@ -2,12 +2,10 @@ const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
 
 // ── Unauthorized handler ──────────────────────────────────────────────────────
 
-let unauthorizedHandler: () => void = () => {
-  window.location.href = '/login';
-};
+let onUnauthorized: (() => void) | null = null;
 
-export function setUnauthorizedHandler(fn: () => void) {
-  unauthorizedHandler = fn;
+export function setOnUnauthorized(fn: () => void) {
+  onUnauthorized = fn;
 }
 
 // ── Token management ──────────────────────────────────────────────────────────
@@ -32,21 +30,30 @@ export function isAuthenticated(): boolean {
 
 // ── HTTP client ───────────────────────────────────────────────────────────────
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
+type RequestOptions = RequestInit & {
+  // When true, a 401 response does NOT clear the token or trigger logout.
+  // Use for optional/display-only endpoints where auth failure is non-critical.
+  silent401?: boolean;
+};
+
+async function request<T>(path: string, options?: RequestOptions): Promise<T> {
+  const { silent401, ...fetchOptions } = options ?? {};
   const token = getToken();
   const res = await fetch(`${BASE}${path}`, {
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options?.headers,
+      ...fetchOptions.headers,
     },
-    ...options,
+    ...fetchOptions,
   });
 
   if (res.status === 401) {
-    clearToken();
-    unauthorizedHandler();
+    if (!silent401) {
+      clearToken();
+      onUnauthorized?.();
+    }
     throw new Error('Unauthorized');
   }
 
@@ -155,7 +162,7 @@ export const api = {
       request<void>('/auth/check'),
 
     me: () =>
-      request<User>('/auth/me'),
+      request<User>('/auth/me', { silent401: true }),
 
     updateApiKey: (anthropicApiKey: string) =>
       request<void>('/auth/api-key', {
