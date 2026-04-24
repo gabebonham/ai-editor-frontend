@@ -1,6 +1,7 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import './index.css';
-import { isAuthenticated } from './lib/api';
+import { isAuthenticated, setUnauthorizedHandler } from './lib/api';
 import LoginPage from './pages/Login';
 import GitHubCallbackPage from './pages/GitHubCallback';
 import ProjectsPage from './pages/Projects';
@@ -13,9 +14,18 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function AuthHandler() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    setUnauthorizedHandler(() => navigate('/login', { replace: true }));
+  }, [navigate]);
+  return null;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
+      <AuthHandler />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/github/callback" element={<GitHubCallbackPage />} />
