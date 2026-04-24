@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { api, setToken } from '../lib/api';
+import { api, setToken, isAuthenticated } from '../lib/api';
 import { Button, Input, Toast } from '../components/ui';
 
 type Mode = 'login' | 'register';
@@ -8,6 +8,10 @@ type Mode = 'login' | 'register';
 export default function LoginPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>('login');
+
+  useEffect(() => {
+    if (isAuthenticated()) navigate('/', { replace: true });
+  }, [navigate]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);

@@ -1,5 +1,15 @@
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
 
+// ── Unauthorized handler ──────────────────────────────────────────────────────
+
+let unauthorizedHandler: () => void = () => {
+  window.location.href = '/login';
+};
+
+export function setUnauthorizedHandler(fn: () => void) {
+  unauthorizedHandler = fn;
+}
+
 // ── Token management ──────────────────────────────────────────────────────────
 
 const TOKEN_KEY = 'liveedit_token';
@@ -36,7 +46,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
   if (res.status === 401) {
     clearToken();
-    window.location.href = '/login';
+    unauthorizedHandler();
     throw new Error('Unauthorized');
   }
 
