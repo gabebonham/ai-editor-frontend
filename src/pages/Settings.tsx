@@ -1,23 +1,17 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { LogOut } from 'lucide-react';
 import { Layout, PageHeader } from '../components/layout';
 import { Card, Input, Button, Toast } from '../components/ui';
-import { api, clearToken } from '../lib/api';
-import type { User } from '../lib/api';
+import { api } from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function SettingsPage() {
-  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
 
-  const [user, setUser] = useState<User | null>(null);
   const [apiKey, setApiKey] = useState('');
   const [savingKey, setSavingKey] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-
-  useEffect(() => {
-    api.auth.me().then(setUser).catch(() => null);
-  }, []);
 
   const handleSaveApiKey = async () => {
     if (!apiKey.trim()) return;
@@ -34,14 +28,8 @@ export default function SettingsPage() {
   };
 
   const handleLogout = async () => {
-    try {
-      await api.auth.logout();
-    } catch {
-      // best-effort
-    } finally {
-      clearToken();
-      navigate('/login');
-    }
+    try { await api.auth.logout(); } catch { /* best-effort */ }
+    logout();
   };
 
   const handleConnectGitHub = () => {

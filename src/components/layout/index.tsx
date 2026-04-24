@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { LayoutGrid, MessageSquare, GitPullRequest, Settings, LogOut } from 'lucide-react';
-import { api, clearToken } from '../../lib/api';
-import type { User } from '../../lib/api';
+import { api } from '../../lib/api';
+import { useAuth } from '../../contexts/AuthContext';
 
 const nav = [
   { to: '/', icon: LayoutGrid, label: 'Projects' },
@@ -12,17 +11,11 @@ const nav = [
 
 export function Sidebar() {
   const { pathname } = useLocation();
-  const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    api.auth.me().then(setUser).catch(() => null);
-  }, []);
+  const { user, logout } = useAuth();
 
   const handleLogout = async () => {
     try { await api.auth.logout(); } catch { /* best-effort */ }
-    clearToken();
-    navigate('/login');
+    logout();
   };
 
   return (

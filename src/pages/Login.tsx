@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { api, setToken, isAuthenticated } from '../lib/api';
+import { api } from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
 import { Button, Input, Toast } from '../components/ui';
 
 type Mode = 'login' | 'register';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { isAuth, login } = useAuth();
   const [mode, setMode] = useState<Mode>('login');
 
   useEffect(() => {
-    if (isAuthenticated()) navigate('/', { replace: true });
-  }, [navigate]);
+    if (isAuth) navigate('/', { replace: true });
+  }, [isAuth, navigate]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,7 +40,7 @@ export default function LoginPage() {
         setToast({ message: 'Account created — signing you in…', type: 'success' });
       }
       const res = await api.auth.login(email, password);
-      setToken(res.accessToken);
+      login(res.accessToken);
       navigate('/');
     } catch (err) {
       setToast({ message: (err as Error).message, type: 'error' });
