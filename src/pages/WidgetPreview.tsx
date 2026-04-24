@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   CheckCircle, XCircle, ChevronDown, ChevronRight,
-  Code2, GitPullRequest, Loader2, AlertTriangle, ArrowLeft,
+  Code2, GitPullRequest, AlertTriangle, ArrowLeft,
 } from 'lucide-react';
 import { Layout, PageHeader } from '../components/layout';
 import { Button, Card, Toast, Spinner, Badge } from '../components/ui';
@@ -27,7 +27,8 @@ export default function WidgetPreviewPage() {
 
   useEffect(() => {
     if (!projectId) {
-      navigate('/');
+      setErrorMsg('No project selected. Go back and click "Inject chat widget" on a project.');
+      setStep('error');
       return;
     }
     loadPreview();
@@ -35,11 +36,11 @@ export default function WidgetPreviewPage() {
 
   async function loadPreview() {
     setStep('loading');
+    setErrorMsg('');
     try {
       const result = await api.snippet.preview(projectId);
       setPreview(result);
       setStep('review');
-      // Auto-expand the first file
       if (result.files.length > 0) setExpandedFile(result.files[0].path);
     } catch (err) {
       setErrorMsg((err as Error).message);
@@ -75,45 +76,51 @@ export default function WidgetPreviewPage() {
 
       <div style={{ padding: '24px 32px', flex: 1, overflow: 'auto' }}>
 
-        {/* ── Loading ─────────────────────────────────────────────────────── */}
+        {/* Loading */}
         {step === 'loading' && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, paddingTop: 80 }}>
             <Spinner size={24} />
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', textAlign: 'center', maxWidth: 340 }}>
               Claude is generating the chat widget and analyzing your repository…
+              <br />
+              <span style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4, display: 'block' }}>
+                This may take 15–30 seconds.
+              </span>
             </p>
           </div>
         )}
 
-        {/* ── Error ───────────────────────────────────────────────────────── */}
+        {/* Error */}
         {step === 'error' && (
           <Card style={{ padding: 32, textAlign: 'center', maxWidth: 480, margin: '60px auto' }}>
             <AlertTriangle size={28} color="var(--accent)" style={{ marginBottom: 12 }} />
-            <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 8 }}>Failed to generate preview</p>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20 }}>{errorMsg}</p>
+            <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 8 }}>Something went wrong</p>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20, lineHeight: 1.6 }}>
+              {errorMsg || 'An unexpected error occurred.'}
+            </p>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
               <Button variant="ghost" onClick={() => navigate('/')}>Back to projects</Button>
-              <Button variant="primary" onClick={loadPreview}>Try again</Button>
+              {projectId && <Button variant="primary" onClick={loadPreview}>Try again</Button>}
             </div>
           </Card>
         )}
 
-        {/* ── Injecting ───────────────────────────────────────────────────── */}
+        {/* Injecting */}
         {step === 'injecting' && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, paddingTop: 80 }}>
-            <Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} color="var(--text-secondary)" />
+            <Spinner size={24} />
             <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
               Creating pull request on GitHub…
             </p>
           </div>
         )}
 
-        {/* ── Done ────────────────────────────────────────────────────────── */}
+        {/* Done */}
         {step === 'done' && (
           <Card style={{ padding: 40, textAlign: 'center', maxWidth: 480, margin: '60px auto' }}>
             <CheckCircle size={32} color="var(--green)" style={{ marginBottom: 16 }} />
             <p style={{ fontWeight: 600, fontSize: 16, marginBottom: 8 }}>Pull request created!</p>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 24 }}>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.6 }}>
               PR #{prNumber} is open on GitHub. Review and merge it to activate the chat widget on your site.
             </p>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -127,7 +134,7 @@ export default function WidgetPreviewPage() {
           </Card>
         )}
 
-        {/* ── Review ──────────────────────────────────────────────────────── */}
+        {/* Review */}
         {step === 'review' && preview && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 900 }}>
 
@@ -135,59 +142,101 @@ export default function WidgetPreviewPage() {
             <Card style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <CheckCircle size={15} color="var(--green)" />
               <span style={{ fontSize: 13, fontWeight: 500 }}>
-                Widget generated — {preview.files.length} file{preview.files.length !== 1 ? 's' : ''} will be modified
+                Widget generated —{' '}
+                {preview.files.length > 0
+                  ? `${preview.files.length} file${preview.files.length !== 1 ? 's' : ''} will be modified`
+                  : 'no HTML template files found in this repo'}
               </span>
-              <Badge variant="default">Ready to apply</Badge>
+              <div style={{ marginLeft: 'auto' }}>
+                <Badge variant="green">Ready to apply</Badge>
+              </div>
             </Card>
 
-            {/* Script tag info */}
-            <Card style={{ overflow: 'hidden' }}>
-              <div
-                style={{
-                  padding: '12px 16px',
-                  borderBottom: '1px solid var(--border)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  cursor: 'pointer',
-                }}
-                onClick={() => setShowWidget(!showWidget)}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Code2 size={14} color="var(--text-secondary)" />
-                  <span style={{ fontSize: 13, fontWeight: 500 }}>Script tag being injected</span>
+            {/* No files warning */}
+            {preview.files.length === 0 && (
+              <Card style={{ padding: 24 }}>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <AlertTriangle size={16} color="var(--amber)" style={{ flexShrink: 0, marginTop: 1 }} />
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 500, marginBottom: 4 }}>No HTML template files detected</p>
+                    <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                      Claude couldn't find an <code>index.html</code>, <code>_document.tsx</code>, or layout file to inject the script tag into.
+                      You can add the script tag manually before the <code>&lt;/body&gt;</code> tag.
+                    </p>
+                    {preview.scriptTag && (
+                      <pre style={{
+                        marginTop: 12,
+                        padding: '10px 12px',
+                        background: 'var(--bg-sunken)',
+                        borderRadius: 'var(--radius-md)',
+                        fontSize: 11,
+                        fontFamily: 'monospace',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-all',
+                        color: 'var(--text-secondary)',
+                      }}>
+                        {preview.scriptTag}
+                      </pre>
+                    )}
+                  </div>
                 </div>
-                {showWidget ? <ChevronDown size={13} color="var(--text-secondary)" /> : <ChevronRight size={13} color="var(--text-secondary)" />}
-              </div>
-              {showWidget && (
-                <pre style={{
-                  padding: '14px 16px',
-                  background: 'var(--bg-sunken)',
-                  fontSize: 11,
-                  fontFamily: 'monospace',
-                  lineHeight: 1.7,
-                  overflow: 'auto',
-                  margin: 0,
-                  color: 'var(--text-secondary)',
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-all',
-                }}>
-                  {preview.scriptTag}
-                </pre>
-              )}
-            </Card>
+              </Card>
+            )}
+
+            {/* Script tag */}
+            {preview.scriptTag && (
+              <Card style={{ overflow: 'hidden' }}>
+                <div
+                  style={{
+                    padding: '12px 16px',
+                    borderBottom: showWidget ? '1px solid var(--border)' : 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setShowWidget(!showWidget)}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Code2 size={14} color="var(--text-secondary)" />
+                    <span style={{ fontSize: 13, fontWeight: 500 }}>Script tag being injected</span>
+                  </div>
+                  {showWidget
+                    ? <ChevronDown size={13} color="var(--text-secondary)" />
+                    : <ChevronRight size={13} color="var(--text-secondary)" />}
+                </div>
+                {showWidget && (
+                  <pre style={{
+                    padding: '14px 16px',
+                    background: 'var(--bg-sunken)',
+                    fontSize: 11,
+                    fontFamily: 'monospace',
+                    lineHeight: 1.7,
+                    overflow: 'auto',
+                    margin: 0,
+                    color: 'var(--text-secondary)',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-all',
+                  }}>
+                    {preview.scriptTag}
+                  </pre>
+                )}
+              </Card>
+            )}
 
             {/* Per-file diffs */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {preview.files.map((file) => (
-                <FileDiff
-                  key={file.path}
-                  file={file}
-                  expanded={expandedFile === file.path}
-                  onToggle={() => setExpandedFile(expandedFile === file.path ? null : file.path)}
-                />
-              ))}
-            </div>
+            {preview.files.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {preview.files.map((file) => (
+                  <FileDiff
+                    key={file.path}
+                    file={file}
+                    expanded={expandedFile === file.path}
+                    onToggle={() => setExpandedFile(expandedFile === file.path ? null : file.path)}
+                  />
+                ))}
+              </div>
+            )}
 
             {/* Action bar */}
             <div style={{
@@ -203,9 +252,11 @@ export default function WidgetPreviewPage() {
               <Button variant="ghost" onClick={() => navigate('/')}>
                 <XCircle size={13} /> Cancel
               </Button>
-              <Button variant="primary" onClick={handleConfirm}>
-                <GitPullRequest size={13} /> Confirm &amp; create PR
-              </Button>
+              {preview.files.length > 0 && (
+                <Button variant="primary" onClick={handleConfirm}>
+                  <GitPullRequest size={13} /> Confirm &amp; create PR
+                </Button>
+              )}
             </div>
 
           </div>
@@ -213,15 +264,11 @@ export default function WidgetPreviewPage() {
       </div>
 
       {toast && <Toast message={toast.message} type={toast.type} onDismiss={() => setToast(null)} />}
-
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-      `}</style>
     </Layout>
   );
 }
 
-// ── FileDiff component ────────────────────────────────────────────────────────
+// ── FileDiff ──────────────────────────────────────────────────────────────────
 
 function FileDiff({ file, expanded, onToggle }: {
   file: FileChangeDiff;
@@ -229,12 +276,11 @@ function FileDiff({ file, expanded, onToggle }: {
   onToggle: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<'diff' | 'original' | 'modified'>('diff');
-
   const diffLines = computeDiff(file.original, file.modified);
+  const addCount = diffLines.filter(l => l.type === 'add').length;
 
   return (
     <Card style={{ overflow: 'hidden' }}>
-      {/* File header */}
       <div
         onClick={onToggle}
         style={{
@@ -246,18 +292,18 @@ function FileDiff({ file, expanded, onToggle }: {
           borderBottom: expanded ? '1px solid var(--border)' : 'none',
         }}
       >
-        {expanded ? <ChevronDown size={13} color="var(--text-secondary)" /> : <ChevronRight size={13} color="var(--text-secondary)" />}
+        {expanded
+          ? <ChevronDown size={13} color="var(--text-secondary)" />
+          : <ChevronRight size={13} color="var(--text-secondary)" />}
         <code style={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--text-primary)', flex: 1 }}>
           {file.path}
         </code>
-        <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{file.description}</span>
-        <Badge variant="green">+{diffLines.filter(l => l.type === 'add').length}</Badge>
+        <span style={{ fontSize: 11, color: 'var(--text-tertiary)', marginRight: 8 }}>{file.description}</span>
+        <Badge variant="green">+{addCount}</Badge>
       </div>
 
-      {/* Diff body */}
       {expanded && (
         <>
-          {/* Tabs */}
           <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
             {(['diff', 'original', 'modified'] as const).map((tab) => (
               <button
@@ -278,7 +324,6 @@ function FileDiff({ file, expanded, onToggle }: {
             ))}
           </div>
 
-          {/* Content */}
           <div style={{ maxHeight: 320, overflow: 'auto', background: 'var(--bg-sunken)' }}>
             {activeTab === 'diff' && (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'monospace', fontSize: 11, lineHeight: 1.7 }}>
@@ -287,17 +332,19 @@ function FileDiff({ file, expanded, onToggle }: {
                     <tr
                       key={i}
                       style={{
-                        background: line.type === 'add'
-                          ? 'rgba(34,197,94,0.08)'
-                          : line.type === 'remove'
-                          ? 'rgba(239,68,68,0.08)'
-                          : 'transparent',
+                        background:
+                          line.type === 'add' ? 'rgba(34,197,94,0.08)' :
+                          line.type === 'remove' ? 'rgba(239,68,68,0.08)' :
+                          'transparent',
                       }}
                     >
                       <td style={{
                         width: 20,
                         paddingLeft: 12,
-                        color: line.type === 'add' ? 'var(--green)' : line.type === 'remove' ? 'var(--accent)' : 'var(--text-tertiary)',
+                        color:
+                          line.type === 'add' ? 'var(--green)' :
+                          line.type === 'remove' ? 'var(--accent)' :
+                          'var(--text-tertiary)',
                         userSelect: 'none',
                         verticalAlign: 'top',
                       }}>
@@ -335,14 +382,15 @@ type DiffLine = { type: 'add' | 'remove' | 'context'; text: string };
 function computeDiff(original: string, modified: string): DiffLine[] {
   const origLines = original.split('\n');
   const modLines = modified.split('\n');
-  const result: DiffLine[] = [];
-
-  // Simple LCS-based diff — good enough for HTML template files
   const lcs = buildLCS(origLines, modLines);
+  const result: DiffLine[] = [];
   let oi = 0, mi = 0, li = 0;
 
   while (oi < origLines.length || mi < modLines.length) {
-    if (li < lcs.length && oi < origLines.length && origLines[oi] === lcs[li] && mi < modLines.length && modLines[mi] === lcs[li]) {
+    const inLCS = li < lcs.length && oi < origLines.length && mi < modLines.length
+      && origLines[oi] === lcs[li] && modLines[mi] === lcs[li];
+
+    if (inLCS) {
       result.push({ type: 'context', text: origLines[oi] });
       oi++; mi++; li++;
     } else if (mi < modLines.length && (li >= lcs.length || modLines[mi] !== lcs[li])) {
@@ -353,18 +401,14 @@ function computeDiff(original: string, modified: string): DiffLine[] {
       oi++;
     }
   }
-
   return result;
 }
 
 function buildLCS(a: string[], b: string[]): string[] {
-  // Cap for perf — beyond 200 lines just show a simple header+footer context
   if (a.length > 200 || b.length > 200) {
-    const added = b.filter(l => !a.includes(l));
-    const removed = a.filter(l => !b.includes(l));
-    return b.filter(l => !added.includes(l) && !removed.includes(l));
+    const bSet = new Set(b);
+    return a.filter(l => bSet.has(l));
   }
-
   const dp: number[][] = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
   for (let i = 1; i <= a.length; i++)
     for (let j = 1; j <= b.length; j++)
