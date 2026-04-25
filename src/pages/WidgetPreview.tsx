@@ -43,7 +43,9 @@ export default function WidgetPreviewPage() {
       setStep('review');
       if (result.files.length > 0) setExpandedFile(result.files[0].path);
     } catch (err) {
-      setErrorMsg((err as Error).message);
+      const msg = (err as Error).message;
+      setErrorMsg(msg);
+      setToast({ message: `Error: ${msg}`, type: 'error' });
       setStep('error');
     }
   }
