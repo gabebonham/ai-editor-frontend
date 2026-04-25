@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus, Globe, Trash2, ArrowRight, GitBranch,
-  FolderOpen, GitFork, Zap, CheckCircle,
+  FolderOpen, GitFork, Zap, CheckCircle, RotateCcw,
 } from 'lucide-react';
 import { Layout, PageHeader } from '../components/layout';
 import { Button, Input, Badge, Card, Empty, Toast, Spinner } from '../components/ui';
@@ -72,6 +72,18 @@ export default function ProjectsPage() {
   const handleInjectWidget = (projectId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     navigate(`/widget-preview?project=${projectId}`);
+  };
+
+  // Reset snippet flag then navigate to preview
+  const handleReInject = async (projectId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await api.projects.resetSnippet(projectId);
+      setProjects(prev => prev.map(p => p.id === projectId ? { ...p, snippetInjected: false } : p));
+      navigate(`/widget-preview?project=${projectId}`);
+    } catch (err) {
+      setToast({ message: (err as Error).message, type: 'error' });
+    }
   };
 
   return (
@@ -167,6 +179,7 @@ export default function ProjectsPage() {
                 onDelete={(e) => handleDelete(p.id, e)}
                 onConnectGitHub={(e) => handleConnectGitHub(p.id, e)}
                 onInjectWidget={(e) => handleInjectWidget(p.id, e)}
+                onReInject={(e) => handleReInject(p.id, e)}
               />
             ))}
           </div>
@@ -186,12 +199,14 @@ function ProjectCard({
   onDelete,
   onConnectGitHub,
   onInjectWidget,
+  onReInject,
 }: {
   project: Project;
   onOpen: () => void;
   onDelete: (e: React.MouseEvent) => void;
   onConnectGitHub: (e: React.MouseEvent) => void;
   onInjectWidget: (e: React.MouseEvent) => void;
+  onReInject: (e: React.MouseEvent) => void;
 }) {
   return (
     <Card
@@ -270,9 +285,14 @@ function ProjectCard({
 
         {/* Widget injection */}
         {p.snippetInjected ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--green)' }}>
-            <CheckCircle size={12} />
-            Widget injected
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--green)' }}>
+              <CheckCircle size={12} />
+              Widget injected
+            </div>
+            <Button variant="ghost" size="sm" onClick={onReInject} title="Re-inject updated widget">
+              <RotateCcw size={11} /> Re-inject
+            </Button>
           </div>
         ) : (
           <Button variant="primary" size="sm" onClick={onInjectWidget} title="Generate and inject the chat widget into this repo">

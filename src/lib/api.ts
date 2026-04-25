@@ -201,6 +201,7 @@ export const api = {
       request<Project>('/projects', { method: 'POST', body: JSON.stringify(data) }),
     findOne: (id: string) => request<Project>(`/projects/${id}`),
     delete: (id: string) => request<void>(`/projects/${id}`, { method: 'DELETE' }),
+    resetSnippet: (id: string) => request<void>(`/projects/${id}/reset-snippet`, { method: 'POST' }),
   },
 
   // ── Prompt ─────────────────────────────────────────────────────────────────
