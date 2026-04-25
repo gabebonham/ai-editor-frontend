@@ -17,6 +17,7 @@ export default function WidgetPreviewPage() {
   const projectId = params.get('project') ?? '';
 
   const [step, setStep] = useState<Step>('loading');
+  const [loadingMsg, setLoadingMsg] = useState('Generating chat widget…');
   const [preview, setPreview] = useState<WidgetPreviewResult | null>(null);
   const [prUrl, setPrUrl] = useState('');
   const [prNumber, setPrNumber] = useState(0);
@@ -38,7 +39,14 @@ export default function WidgetPreviewPage() {
     setStep('loading');
     setErrorMsg('');
     try {
-      const result = await api.snippet.preview(projectId);
+      // Step 1 — generate widget JS (~4s)
+      setLoadingMsg('Step 1/2 — Generating chat widget code…');
+      const { scriptTag } = await api.snippet.generateWidget(projectId);
+
+      // Step 2 — inject into repo files (~4s)
+      setLoadingMsg('Step 2/2 — Injecting into your HTML files…');
+      const result = await api.snippet.injectWidget(projectId, scriptTag);
+
       setPreview(result);
       setStep('review');
       if (result.files.length > 0) setExpandedFile(result.files[0].path);
@@ -83,10 +91,10 @@ export default function WidgetPreviewPage() {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, paddingTop: 80 }}>
             <Spinner size={24} />
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', textAlign: 'center', maxWidth: 340 }}>
-              Claude is generating the chat widget and analyzing your repository…
+              {loadingMsg}
               <br />
               <span style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4, display: 'block' }}>
-                This may take 15–30 seconds.
+                Each step takes ~5 seconds.
               </span>
             </p>
           </div>

@@ -244,14 +244,28 @@ export const api = {
   // ── Snippet / Widget ───────────────────────────────────────────────────────
 
   snippet: {
-    // Step 1 — Generate widget + diff WITHOUT creating a PR (for review screen)
+    // Step A — Generate widget JS only (~4s)
+    generateWidget: (projectId: string) =>
+      request<{ widgetCode: string; scriptTag: string }>('/snippet/generate-widget', {
+        method: 'POST',
+        body: JSON.stringify({ projectId }),
+      }),
+
+    // Step B — Inject scriptTag into repo files (~4s)
+    injectWidget: (projectId: string, scriptTag: string) =>
+      request<WidgetPreviewResult>('/snippet/inject-widget', {
+        method: 'POST',
+        body: JSON.stringify({ projectId, scriptTag }),
+      }),
+
+    // Legacy single-call preview (kept for reference)
     preview: (projectId: string, cdnUrl?: string) =>
       request<WidgetPreviewResult>('/snippet/preview', {
         method: 'POST',
         body: JSON.stringify({ projectId, ...(cdnUrl ? { cdnUrl } : {}) }),
       }),
 
-    // Step 2 — Actually create the PR after user approves the preview
+    // Create PR after user approves
     inject: (projectId: string, cdnUrl?: string) =>
       request<WidgetInjectResult>('/snippet/inject', {
         method: 'POST',
