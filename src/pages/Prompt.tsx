@@ -135,7 +135,7 @@ export default function PromptPage() {
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Messages */}
-        <div style={{ flex: 1, overflow: 'auto', padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ flex: 1, overflow: 'auto', padding: 'clamp(12px, 4vw, 24px) clamp(12px, 4vw, 32px)', display: 'flex', flexDirection: 'column', gap: 20 }}>
           {messages.length === 0 ? (
             <Empty
               icon={<Zap size={28} />}
@@ -167,7 +167,7 @@ export default function PromptPage() {
         </div>
 
         {/* Input */}
-        <div style={{ borderTop: '1px solid var(--border)', padding: '16px 32px', background: 'var(--bg-elevated)' }}>
+        <div style={{ borderTop: '1px solid var(--border)', padding: '12px clamp(12px, 4vw, 32px)', background: 'var(--bg-elevated)' }}>
           <div style={{
             display: 'flex',
             gap: 10,

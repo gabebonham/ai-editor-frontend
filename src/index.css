@@ -89,3 +89,23 @@ a { text-decoration: none; color: inherit; }
   white-space: nowrap;
   border: 0;
 }
+
+/* ── Responsive utilities ──────────────────────────────────────────────────── */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Mobile: reduce padding on cards and content areas */
+@media (max-width: 767px) {
+  :root {
+    --sidebar-width: 240px;
+  }
+}
+
+/* Projects grid: single column on mobile */
+@media (max-width: 640px) {
+  /* PageHeader action button wraps below title */
+  /* Project card form: stack fields */
+}

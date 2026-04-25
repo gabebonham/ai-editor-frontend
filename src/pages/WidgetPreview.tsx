@@ -136,7 +136,7 @@ export default function WidgetPreviewPage() {
 
         {/* Review */}
         {step === 'review' && preview && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 900 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 900, width: '100%' }}>
 
             {/* Summary bar */}
             <Card style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>

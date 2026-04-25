@@ -103,7 +103,7 @@ export default function ProjectsPage() {
         {showForm && (
           <Card style={{ marginBottom: 24, padding: 20 }}>
             <h2 style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>New project</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 12 }}>
               <Input
                 label="Project name"
                 placeholder="My App"
