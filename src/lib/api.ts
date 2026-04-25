@@ -38,7 +38,6 @@ async function request<T>(path: string, options?: RequestOptions): Promise<T> {
   const { silent401, ...fetchOptions } = options ?? {};
   const token = getToken();
   const res = await fetch(`${BASE}${path}`, {
-    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
