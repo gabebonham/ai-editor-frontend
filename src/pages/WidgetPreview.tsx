@@ -62,7 +62,13 @@ export default function WidgetPreviewPage() {
     if (!preview) return;
     setStep('injecting');
     try {
-      const result = await api.snippet.inject(projectId);
+      // Send the already-generated files — no Claude call, just creates the PR
+      const files = preview.files.map(f => ({
+        path: f.path,
+        content: f.modified,
+        description: f.description,
+      }));
+      const result = await api.snippet.applyPr(projectId, files);
       setPrUrl(result.prUrl);
       setPrNumber(result.prNumber);
       setStep('done');

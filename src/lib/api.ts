@@ -265,7 +265,14 @@ export const api = {
         body: JSON.stringify({ projectId, ...(cdnUrl ? { cdnUrl } : {}) }),
       }),
 
-    // Create PR after user approves
+    // Create PR after user approves — sends pre-generated files, no Claude call
+    applyPr: (projectId: string, files: { path: string; content: string; description: string }[]) =>
+      request<WidgetInjectResult>('/snippet/apply-pr', {
+        method: 'POST',
+        body: JSON.stringify({ projectId, files }),
+      }),
+
+    // Legacy inject (kept for reference)
     inject: (projectId: string, cdnUrl?: string) =>
       request<WidgetInjectResult>('/snippet/inject', {
         method: 'POST',
