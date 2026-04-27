@@ -77,11 +77,6 @@ When response has pendingChange, show "✅ Create PR" and "↩️ Undo" buttons.
 
 CRITICAL: Return ONLY raw JavaScript — no markdown fences, no explanation.`;
 
-const INJECT_SYSTEM = `You are a code assistant that injects an inline JavaScript widget into web projects.
-Identify root layout/shell files (index.html, app/layout.tsx, _document.tsx) and place the script block just before </body> or at the end of the JSX body.
-For TSX/JSX files, use a dangerouslySetInnerHTML script or plain <script> tag.
-Preserve all existing formatting.
-Return ONLY valid JSON: { "changes": [{ "path", "content", "description" }] }`;
 
 export default function WidgetPreviewPage() {
   const [params] = useSearchParams();
@@ -114,7 +109,6 @@ export default function WidgetPreviewPage() {
       if (!apiKey) { setStep('no-key'); return; }
 
       // Get project info for the API endpoint
-      const project = await api.projects.findOne(projectId);
       const backendUrl = import.meta.env.VITE_API_URL?.replace('/api', '') ?? 'https://ai-editor-backend.vercel.app';
       const apiEndpoint = `${backendUrl}/api/chat`;
 
