@@ -205,7 +205,9 @@ export default function WidgetPreviewPage() {
             <Card style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <CheckCircle size={15} color="var(--green)" />
               <span style={{ fontSize: 13, fontWeight: 500 }}>
-                Widget generated — {preview.files.length > 0 ? `${preview.files.length} file${preview.files.length !== 1 ? 's' : ''} will be modified` : 'no template files found'}
+                {preview.files.length > 0
+                  ? `Widget generated — ${preview.files.length} file${preview.files.length !== 1 ? 's' : ''} will be modified`
+                  : 'Widget already active — script tag is already in your layout'}
               </span>
               <div style={{ marginLeft: 'auto' }}><Badge variant="green">Ready to apply</Badge></div>
             </Card>
