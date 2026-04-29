@@ -62,19 +62,16 @@ export default function ProjectsPage() {
     }
   };
 
-  // Redirect to GitHub OAuth — encodes projectId so the callback links the token
   const handleConnectGitHub = (projectId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     window.location.href = api.github.authorizeUrl(projectId);
   };
 
-  // Navigate to the widget preview/diff page for this project
   const handleInjectWidget = (projectId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     navigate(`/widget-preview?project=${projectId}`);
   };
 
-  // Reset snippet flag then navigate to preview
   const handleReInject = async (projectId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
@@ -99,60 +96,79 @@ export default function ProjectsPage() {
       />
 
       <div style={{ padding: '24px 32px', flex: 1 }}>
+
         {/* Create form */}
         {showForm && (
-          <Card style={{ marginBottom: 24, padding: 20 }}>
-            <h2 style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>New project</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 12 }}>
-              <Input
-                label="Project name"
-                placeholder="My App"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                error={errors.name}
-              />
-              <Input
-                label="Default branch"
-                placeholder="main"
-                value={form.defaultBranch}
-                onChange={(e) => setForm({ ...form, defaultBranch: e.target.value })}
-              />
-              <Input
-                label="GitHub owner"
-                placeholder="acme-corp or paste GitHub URL"
-                value={form.githubOwner}
-                onChange={(e) => {
-                  const val = e.target.value.trim();
-                  const match = val.match(/github\.com\/([^/]+)/);
-                  if (match) {
-                    // If user pasted a full URL, split owner and repo automatically
-                    const repoMatch = val.match(/github\.com\/([^/]+)\/([^/]+?)(\.git)?\s*$/);
-                    setForm({
-                      ...form,
-                      githubOwner: match[1],
-                      githubRepo: repoMatch ? repoMatch[2] : form.githubRepo,
-                    });
-                  } else {
-                    setForm({ ...form, githubOwner: e.target.value });
-                  }
-                }}
-                error={errors.githubOwner}
-              />
-              <Input
-                label="Repository"
-                placeholder="my-repo or paste GitHub URL"
-                value={form.githubRepo}
-                onChange={(e) => {
-                  const val = e.target.value.trim();
-                  const match = val.match(/github\.com\/[^/]+\/([^/]+?)(\.git)?\s*$/);
-                  setForm({ ...form, githubRepo: match ? match[1] : e.target.value });
-                }}
-                error={errors.githubRepo}
-              />
+          <Card style={{ marginBottom: 24 }}>
+            <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border)' }}>
+              <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+                New project
+              </h2>
             </div>
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <Button variant="ghost" onClick={() => { setShowForm(false); setErrors({}); }}>Cancel</Button>
-              <Button variant="primary" onClick={handleCreate} loading={creating}>Create project</Button>
+            <div style={{ padding: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 16 }}>
+                <Input
+                  label="Project name"
+                  placeholder="My App"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  error={errors.name}
+                />
+                <Input
+                  label="Default branch"
+                  placeholder="main"
+                  value={form.defaultBranch}
+                  onChange={(e) => setForm({ ...form, defaultBranch: e.target.value })}
+                />
+                <Input
+                  label="GitHub owner"
+                  placeholder="acme-corp or paste GitHub URL"
+                  value={form.githubOwner}
+                  onChange={(e) => {
+                    const val = e.target.value.trim();
+                    const match = val.match(/github\.com\/([^/]+)/);
+                    if (match) {
+                      const repoMatch = val.match(/github\.com\/([^/]+)\/([^/]+?)(\.git)?\s*$/);
+                      setForm({
+                        ...form,
+                        githubOwner: match[1],
+                        githubRepo: repoMatch ? repoMatch[2] : form.githubRepo,
+                      });
+                    } else {
+                      setForm({ ...form, githubOwner: e.target.value });
+                    }
+                  }}
+                  error={errors.githubOwner}
+                />
+                <Input
+                  label="Repository"
+                  placeholder="my-repo or paste GitHub URL"
+                  value={form.githubRepo}
+                  onChange={(e) => {
+                    const val = e.target.value.trim();
+                    const match = val.match(/github\.com\/[^/]+\/([^/]+?)(\.git)?\s*$/);
+                    setForm({ ...form, githubRepo: match ? match[1] : e.target.value });
+                  }}
+                  error={errors.githubRepo}
+                />
+              </div>
+            </div>
+            {/* Card footer */}
+            <div style={{
+              padding: '12px 20px',
+              background: '#fafafa',
+              borderTop: '1px solid var(--border)',
+              borderRadius: '0 0 var(--radius-lg) var(--radius-lg)',
+              display: 'flex',
+              gap: 8,
+              justifyContent: 'flex-end',
+            }}>
+              <Button variant="ghost" onClick={() => { setShowForm(false); setErrors({}); }}>
+                Cancel
+              </Button>
+              <Button variant="primary" onClick={handleCreate} loading={creating}>
+                Create project
+              </Button>
             </div>
           </Card>
         )}
@@ -167,7 +183,11 @@ export default function ProjectsPage() {
             icon={<FolderOpen size={32} />}
             title="No projects yet"
             description="Connect a GitHub repository to start making AI-powered code changes."
-            action={<Button variant="primary" onClick={() => setShowForm(true)}><Plus size={13} /> New project</Button>}
+            action={
+              <Button variant="primary" onClick={() => setShowForm(true)}>
+                <Plus size={13} /> New project
+              </Button>
+            }
           />
         ) : (
           <div style={{ display: 'grid', gap: 10 }}>
@@ -211,30 +231,33 @@ function ProjectCard({
   return (
     <Card
       style={{
-        padding: '16px 20px',
         cursor: 'pointer',
-        transition: 'border-color 0.12s',
+        overflow: 'hidden',
       }}
       onClick={onOpen}
     >
-      {/* Top row: icon + name + branch + date + delete + open */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+      {/* Main content */}
+      <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
+        {/* Icon */}
         <div style={{
-          width: 36,
-          height: 36,
-          background: 'var(--bg-elevated)',
+          width: 38,
+          height: 38,
+          background: 'var(--badge-bg)',
           borderRadius: 'var(--radius-md)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: 0,
+          border: '1px solid var(--border-accent)',
         }}>
-          <Globe size={16} color="var(--text-secondary)" />
+          <Globe size={16} color="var(--accent)" />
         </div>
 
         <div style={{ minWidth: 0, flex: 1 }}>
-          <p style={{ fontWeight: 600, fontSize: 13, marginBottom: 2 }}>{p.name}</p>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <p style={{ fontWeight: 600, fontSize: 13, marginBottom: 3, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+            {p.name}
+          </p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 12, fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {p.githubOwner}/{p.githubRepo}
           </p>
         </div>
@@ -244,7 +267,7 @@ function ProjectCard({
             <GitBranch size={10} style={{ marginRight: 3 }} />
             {p.defaultBranch}
           </Badge>
-          <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
+          <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
             {new Date(p.createdAt).toLocaleDateString()}
           </span>
           <button
@@ -253,24 +276,24 @@ function ProjectCard({
             style={{
               padding: 4,
               borderRadius: 'var(--radius-sm)',
-              color: 'var(--text-tertiary)',
+              color: 'var(--text-muted)',
               transition: 'color 0.1s',
               display: 'flex',
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent)')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-tertiary)')}
+            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--error)')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
           >
             <Trash2 size={13} />
           </button>
-          <ArrowRight size={13} color="var(--text-tertiary)" />
+          <ArrowRight size={13} color="var(--text-muted)" />
         </div>
       </div>
 
-      {/* Bottom row: GitHub + widget actions */}
+      {/* Card footer: actions */}
       <div
         style={{
-          marginTop: 12,
-          paddingTop: 12,
+          padding: '10px 20px',
+          background: '#fafafa',
           borderTop: '1px solid var(--border)',
           display: 'flex',
           alignItems: 'center',
@@ -278,15 +301,13 @@ function ProjectCard({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* GitHub OAuth link */}
-        <Button variant="ghost" size="sm" onClick={onConnectGitHub} title="Authorize GitHub access for this project">
+        <Button variant="ghost" size="sm" onClick={onConnectGitHub} title="Authorize GitHub access">
           <GitFork size={12} /> Connect GitHub
         </Button>
 
-        {/* Widget injection */}
         {p.snippetInjected ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--green)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--success)', fontWeight: 500 }}>
               <CheckCircle size={12} />
               Widget injected
             </div>
@@ -295,7 +316,7 @@ function ProjectCard({
             </Button>
           </div>
         ) : (
-          <Button variant="primary" size="sm" onClick={onInjectWidget} title="Generate and inject the chat widget into this repo">
+          <Button variant="primary" size="sm" onClick={onInjectWidget} title="Generate and inject widget">
             <Zap size={12} /> Inject chat widget
           </Button>
         )}

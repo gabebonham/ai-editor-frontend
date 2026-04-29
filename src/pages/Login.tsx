@@ -14,6 +14,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (isAuth) navigate('/', { replace: true });
   }, [isAuth, navigate]);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -65,40 +66,61 @@ export default function LoginPage() {
       background: 'var(--bg)',
       padding: 24,
     }}>
-      <div style={{ width: '100%', maxWidth: 380 }}>
+      <div style={{ width: '100%', maxWidth: 400 }}>
+
         {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32, justifyContent: 'center' }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          marginBottom: 36,
+          justifyContent: 'center',
+        }}>
           <div style={{
-            width: 32,
-            height: 32,
-            background: 'var(--text-primary)',
-            borderRadius: 7,
+            width: 36,
+            height: 36,
+            background: 'var(--accent-secondary)',
+            borderRadius: 8,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
           }}>
-            <svg width="16" height="16" viewBox="0 0 12 12" fill="none">
-              <path d="M2 10L6 2L10 10M3.5 7.5h5" stroke="var(--bg)" strokeWidth="1.4" strokeLinecap="round" />
-            </svg>
+            <span style={{ fontWeight: 800, fontSize: 13, color: '#ffffff', letterSpacing: '-0.03em' }}>AI</span>
           </div>
-          <span style={{ fontWeight: 600, fontSize: 16, letterSpacing: '-0.02em' }}>AI Editor</span>
+          <span style={{
+            fontWeight: 700,
+            fontSize: 17,
+            letterSpacing: '-0.03em',
+            color: 'var(--text-primary)',
+          }}>
+            AI Site Manager
+          </span>
         </div>
 
         {/* Card */}
         <div style={{
-          background: 'var(--surface)',
+          background: 'var(--bg-card)',
           border: '1px solid var(--border)',
           borderRadius: 'var(--radius-xl)',
-          padding: '28px 28px 24px',
+          boxShadow: 'var(--shadow-md)',
+          padding: '32px 32px 28px',
         }}>
-          <h1 style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>
+          <h1 style={{
+            fontSize: 18,
+            fontWeight: 700,
+            marginBottom: 4,
+            letterSpacing: '-0.02em',
+            color: 'var(--text-primary)',
+          }}>
             {mode === 'login' ? 'Sign in' : 'Create account'}
           </h1>
-          <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 22 }}>
-            {mode === 'login' ? 'Welcome back to LiveEdit.' : 'Start editing your site with AI.'}
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 24 }}>
+            {mode === 'login'
+              ? 'Welcome back. Edit your site with AI.'
+              : 'Start editing your site with natural language.'}
           </p>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <Input
               label="Email"
               type="email"
@@ -130,12 +152,17 @@ export default function LoginPage() {
         </div>
 
         {/* Toggle */}
-        <p style={{ textAlign: 'center', marginTop: 16, fontSize: 13, color: 'var(--text-secondary)' }}>
+        <p style={{
+          textAlign: 'center',
+          marginTop: 18,
+          fontSize: 13,
+          color: 'var(--text-secondary)',
+        }}>
           {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
           <Link
             to="#"
             onClick={(e) => { e.preventDefault(); toggleMode(); }}
-            style={{ color: 'var(--text-primary)', fontWeight: 500, textDecoration: 'underline' }}
+            style={{ color: 'var(--accent)', fontWeight: 500 }}
           >
             {mode === 'login' ? 'Sign up' : 'Sign in'}
           </Link>

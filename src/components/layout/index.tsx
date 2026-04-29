@@ -26,7 +26,6 @@ export function Sidebar() {
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
 
-  // Close drawer on route change
   useEffect(() => { setOpen(false); }, [pathname]);
 
   const handleLogout = async () => {
@@ -38,28 +37,50 @@ export function Sidebar() {
     <aside style={{
       width: 'var(--sidebar-width)',
       height: '100%',
-      background: 'var(--bg-elevated)',
+      background: 'var(--bg-secondary)',
       borderRight: '1px solid var(--border)',
       display: 'flex',
       flexDirection: 'column',
     }}>
       {/* Logo */}
-      <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{
+        padding: '18px 16px 14px',
+        borderBottom: '1px solid var(--border)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+          {/* Logo box: 28×28px, bg accent-secondary (#e63946), "AI" text */}
           <div style={{
-            width: 24, height: 24,
-            background: 'var(--text-primary)',
-            borderRadius: 5,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: 28,
+            height: 28,
+            background: 'var(--accent-secondary)',
+            borderRadius: 6,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
           }}>
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M2 10L6 2L10 10M3.5 7.5h5" stroke="var(--bg)" strokeWidth="1.4" strokeLinecap="round" />
-            </svg>
+            <span style={{
+              fontFamily: 'var(--font-sans)',
+              fontWeight: 700,
+              fontSize: 10,
+              color: '#ffffff',
+              letterSpacing: '-0.02em',
+            }}>AI</span>
           </div>
-          <span style={{ fontWeight: 600, fontSize: 13, letterSpacing: '-0.01em' }}>AI Editor</span>
+          <span style={{
+            fontWeight: 600,
+            fontSize: 13,
+            letterSpacing: '-0.02em',
+            color: 'var(--text-primary)',
+          }}>
+            AI Site Manager
+          </span>
         </div>
         {isMobile && (
-          <button onClick={() => setOpen(false)} style={{ color: 'var(--text-secondary)', display: 'flex' }}>
+          <button onClick={() => setOpen(false)} style={{ color: 'var(--text-muted)', display: 'flex' }}>
             <X size={18} />
           </button>
         )}
@@ -74,15 +95,20 @@ export function Sidebar() {
               key={to}
               to={to}
               style={{
-                display: 'flex', alignItems: 'center', gap: 8,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
                 padding: '8px 10px',
-                borderRadius: 'var(--radius-md)',
-                color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
-                background: active ? 'var(--bg-sunken)' : 'transparent',
-                fontWeight: active ? 500 : 400,
+                /* Active: left red indicator + tinted bg + red text */
+                borderLeft: active ? '3px solid var(--accent-secondary)' : '3px solid transparent',
+                borderRadius: active ? '0 8px 8px 0' : 'var(--radius-md)',
+                background: active ? 'rgba(230,57,70,0.07)' : 'transparent',
+                color: active ? 'var(--accent-secondary)' : 'var(--text-secondary)',
+                fontWeight: active ? 600 : 400,
                 fontSize: 13,
                 transition: 'all 0.1s',
                 marginBottom: 1,
+                textDecoration: 'none',
               }}
             >
               <Icon size={14} strokeWidth={active ? 2 : 1.5} />
@@ -93,41 +119,67 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div style={{ padding: '12px 8px', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <div style={{ padding: '10px 8px', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 2 }}>
         <Link
           to="/settings"
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
             padding: '7px 10px',
-            borderRadius: 'var(--radius-md)',
-            color: pathname === '/settings' ? 'var(--text-primary)' : 'var(--text-secondary)',
-            background: pathname === '/settings' ? 'var(--bg-sunken)' : 'transparent',
+            borderLeft: pathname === '/settings' ? '3px solid var(--accent-secondary)' : '3px solid transparent',
+            borderRadius: pathname === '/settings' ? '0 8px 8px 0' : 'var(--radius-md)',
+            background: pathname === '/settings' ? 'rgba(230,57,70,0.07)' : 'transparent',
+            color: pathname === '/settings' ? 'var(--accent-secondary)' : 'var(--text-secondary)',
             fontSize: 13,
+            fontWeight: pathname === '/settings' ? 600 : 400,
+            transition: 'all 0.1s',
           }}
         >
-          <Settings size={14} strokeWidth={1.5} />
+          <Settings size={14} strokeWidth={pathname === '/settings' ? 2 : 1.5} />
           Settings
         </Link>
 
         {user && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 10px', marginTop: 2 }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 7,
+            padding: '8px 10px',
+            marginTop: 4,
+            borderTop: '1px solid var(--border)',
+          }}>
+            {/* Avatar */}
             <div style={{
-              width: 20, height: 20, borderRadius: '50%',
-              background: 'var(--bg-sunken)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 10, fontWeight: 600, color: 'var(--text-secondary)', flexShrink: 0,
+              width: 22,
+              height: 22,
+              borderRadius: '50%',
+              background: 'var(--accent)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 10,
+              fontWeight: 700,
+              color: '#ffffff',
+              flexShrink: 0,
             }}>
               {user.email[0].toUpperCase()}
             </div>
-            <span style={{ fontSize: 11, color: 'var(--text-tertiary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{
+              fontSize: 11,
+              color: 'var(--text-muted)',
+              fontFamily: 'var(--font-mono)',
+              flex: 1,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}>
               {user.email}
             </span>
             <button
               onClick={handleLogout}
               title="Sign out"
-              style={{ display: 'flex', color: 'var(--text-tertiary)', padding: 2, borderRadius: 'var(--radius-sm)', transition: 'color 0.1s', flexShrink: 0 }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent)')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-tertiary)')}
+              style={{ display: 'flex', color: 'var(--text-muted)', padding: 2, borderRadius: 'var(--radius-sm)', transition: 'color 0.1s', flexShrink: 0 }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--error)')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
             >
               <LogOut size={12} />
             </button>
@@ -144,37 +196,33 @@ export function Sidebar() {
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200,
           height: 52,
-          background: 'var(--bg-elevated)',
+          background: 'var(--bg-secondary)',
           borderBottom: '1px solid var(--border)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '0 16px',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 22, height: 22, background: 'var(--text-primary)', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-                <path d="M2 10L6 2L10 10M3.5 7.5h5" stroke="var(--bg)" strokeWidth="1.4" strokeLinecap="round" />
-              </svg>
+            <div style={{ width: 26, height: 26, background: 'var(--accent-secondary)', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontWeight: 700, fontSize: 9, color: '#fff', letterSpacing: '-0.02em' }}>AI</span>
             </div>
-            <span style={{ fontWeight: 600, fontSize: 13 }}>AI Editor</span>
+            <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)' }}>AI Site Manager</span>
           </div>
           <button onClick={() => setOpen(true)} style={{ color: 'var(--text-primary)', display: 'flex', padding: 4 }}>
             <Menu size={20} />
           </button>
         </div>
 
-        {/* Drawer backdrop */}
         {open && (
           <div
             onClick={() => setOpen(false)}
             style={{
               position: 'fixed', inset: 0, zIndex: 299,
-              background: 'rgba(0,0,0,0.3)',
+              background: 'rgba(29,53,87,0.25)',
               animation: 'fadeIn 0.15s ease',
             }}
           />
         )}
 
-        {/* Drawer */}
         <div style={{
           position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 300,
           width: 'var(--sidebar-width)',
@@ -187,7 +235,6 @@ export function Sidebar() {
     );
   }
 
-  // Desktop: fixed sidebar
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, height: '100vh', zIndex: 100 }}>
       {sidebarContent}
@@ -208,6 +255,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         overflow: 'auto',
         display: 'flex',
         flexDirection: 'column',
+        background: 'var(--bg)',
       }}>
         {children}
       </main>
@@ -222,8 +270,9 @@ export function PageHeader({ title, description, action }: {
 }) {
   return (
     <div style={{
-      padding: 'clamp(16px, 4vw, 28px) clamp(16px, 4vw, 32px) 20px',
+      padding: 'clamp(16px,4vw,28px) clamp(16px,4vw,32px) 20px',
       borderBottom: '1px solid var(--border)',
+      background: 'var(--bg-card)',
       display: 'flex',
       alignItems: 'flex-start',
       justifyContent: 'space-between',
@@ -231,8 +280,18 @@ export function PageHeader({ title, description, action }: {
       flexWrap: 'wrap',
     }}>
       <div style={{ minWidth: 0 }}>
-        <h1 style={{ fontSize: 'clamp(15px, 3vw, 18px)', fontWeight: 600, letterSpacing: '-0.02em', marginBottom: description ? 3 : 0 }}>{title}</h1>
-        {description && <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{description}</p>}
+        <h1 style={{
+          fontSize: 'clamp(15px,3vw,18px)',
+          fontWeight: 700,
+          letterSpacing: '-0.02em',
+          color: 'var(--text-primary)',
+          marginBottom: description ? 3 : 0,
+        }}>
+          {title}
+        </h1>
+        {description && (
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{description}</p>
+        )}
       </div>
       {action && <div style={{ flexShrink: 0 }}>{action}</div>}
     </div>
