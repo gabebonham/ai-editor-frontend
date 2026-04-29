@@ -36,8 +36,10 @@ export default function LoginPage() {
     setLoading(true);
     try {
       if (mode === 'register') {
-        await api.auth.register(email, password);
-        setToast({ message: 'Account created — signing you in…', type: 'success' });
+        const res = await api.auth.register(email, password);
+        login(res.accessToken);
+        navigate('/');
+        return;
       }
       const res = await api.auth.login(email, password);
       login(res.accessToken);

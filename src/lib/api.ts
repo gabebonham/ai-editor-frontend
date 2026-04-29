@@ -1,6 +1,6 @@
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
 
-// ── Unauthorized handler ──────────────────────────────────────────────────────
+// ── Unauthorized handler ───────────────────────────────────────────────────────────────────────────
 
 let onUnauthorized: (() => void) | null = null;
 
@@ -8,7 +8,7 @@ export function setOnUnauthorized(fn: () => void) {
   onUnauthorized = fn;
 }
 
-// ── Token management ──────────────────────────────────────────────────────────
+// ── Token management ───────────────────────────────────────────────────────────────────────────────
 
 const TOKEN_KEY = 'liveedit_token';
 
@@ -28,7 +28,7 @@ export function isAuthenticated(): boolean {
   return !!getToken();
 }
 
-// ── HTTP client ───────────────────────────────────────────────────────────────
+// ── HTTP client ───────────────────────────────────────────────────────────────────────────────
 
 type RequestOptions = RequestInit & {
   silent401?: boolean;
@@ -38,6 +38,7 @@ async function request<T>(path: string, options?: RequestOptions): Promise<T> {
   const { silent401, ...fetchOptions } = options ?? {};
   const token = getToken();
   const res = await fetch(`${BASE}${path}`, {
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -70,7 +71,7 @@ async function request<T>(path: string, options?: RequestOptions): Promise<T> {
   return res.json();
 }
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Types ───────────────────────────────────────────────────────────────────────────────────
 
 export interface User {
   id: string;
@@ -140,7 +141,7 @@ export interface SaveExplorationPayload {
   htmlSnapshot?: string;
 }
 
-// ── Widget / Snippet types ────────────────────────────────────────────────────
+// ── Widget / Snippet types ────────────────────────────────────────────────────────────────
 
 export interface FileChangeDiff {
   path: string;
@@ -164,15 +165,15 @@ export interface WidgetInjectResult {
   filesChanged: string[];
 }
 
-// ── API ───────────────────────────────────────────────────────────────────────
+// ── API ────────────────────────────────────────────────────────────────────────────────────
 
 export const api = {
 
-  // ── Auth ───────────────────────────────────────────────────────────────────
+  // ── Auth ─────────────────────────────────────────────────────────────────────────────
 
   auth: {
     register: (email: string, password: string) =>
-      request<void>('/auth/register', {
+      request<{ accessToken: string }>('/auth/register', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       }),
@@ -199,7 +200,7 @@ export const api = {
       }),
   },
 
-  // ── Projects ───────────────────────────────────────────────────────────────
+  // ── Projects ─────────────────────────────────────────────────────────────────────────
 
   projects: {
     list: () => request<Project[]>('/projects'),
@@ -210,7 +211,7 @@ export const api = {
     resetSnippet: (id: string) => request<void>(`/projects/${id}/reset-snippet`, { method: 'POST' }),
   },
 
-  // ── Prompt ─────────────────────────────────────────────────────────────────
+  // ── Prompt ───────────────────────────────────────────────────────────────────────────
 
   prompt: {
     send: (payload: {
@@ -220,7 +221,7 @@ export const api = {
     }) => request<PromptResult>('/prompt', { method: 'POST', body: JSON.stringify(payload) }),
   },
 
-  // ── Apply ──────────────────────────────────────────────────────────────────
+  // ── Apply ────────────────────────────────────────────────────────────────────────────
 
   apply: {
     submit: (payload: {
@@ -231,7 +232,7 @@ export const api = {
     }) => request<ApplyResult>('/apply', { method: 'POST', body: JSON.stringify(payload) }),
   },
 
-  // ── GitHub OAuth ───────────────────────────────────────────────────────────
+  // ── GitHub OAuth ─────────────────────────────────────────────────────────────────────
 
   github: {
     // Pass projectId so the OAuth callback can link the token to the project automatically
@@ -241,7 +242,7 @@ export const api = {
     },
   },
 
-  // ── Snippet / Widget ───────────────────────────────────────────────────────
+  // ── Snippet / Widget ────────────────────────────────────────────────────────────────────
 
   snippet: {
     // Step A — Generate widget JS only (~4s)
@@ -280,7 +281,7 @@ export const api = {
       }),
   },
 
-  // ── Explorations ───────────────────────────────────────────────────────────
+  // ── Explorations ─────────────────────────────────────────────────────────────────────
 
   explorations: {
     save: (data: SaveExplorationPayload) =>
