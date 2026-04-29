@@ -101,31 +101,11 @@ export default function WidgetPreviewPage() {
   async function loadPreview() {
     setStep('loading');
     setErrorMsg('');
-
     try {
-      // Get user's Anthropic API key
-      const user = await api.auth.me();
-      const apiKey = (user as any).anthropicApiKey as string | null;
-      if (!apiKey) { setStep('no-key'); return; }
-
-      // Get project info for the API endpoint
-      const backendUrl = import.meta.env.VITE_API_URL?.replace('/api', '') ?? 'https://ai-editor-backend.vercel.app';
-      const apiEndpoint = `${backendUrl}/api/chat`;
-
-      // Step 1 — generate widget JS directly via Anthropic (browser → Anthropic, no backend)
-      setLoadingMsg('Step 1/2 — Generating widget code…');
-      let widgetCode = await callClaude(
-        apiKey,
-        WIDGET_SYSTEM,
-        `Generate the chat widget with these hardcoded values:\nPROJECT_ID = "${projectId}"\nAPI_ENDPOINT = "${apiEndpoint}"\nHardcode as constants at top. Script is inlined in HTML.`,
-      );
-      widgetCode = widgetCode.replace(/^```(?:javascript|js)?\s*/i, '').replace(/```\s*$/i, '').trim();
-      const scriptTag = `<script data-liveedit-widget data-project="${projectId}">\n${widgetCode}\n</script>`;
-
-      // Step 2 — inject into repo files via backend (no Claude call on backend side)
+      setLoadingMsg('Step 1/2 — Generating widget tag…');
+      const { scriptTag } = await api.snippet.generateWidget(projectId);
       setLoadingMsg('Step 2/2 — Injecting into repository files…');
       const result = await api.snippet.injectWidget(projectId, scriptTag);
-
       setPreview(result);
       setStep('review');
       if (result.files.length > 0) setExpandedFile(result.files[0].path);
