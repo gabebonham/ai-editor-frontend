@@ -1,6 +1,6 @@
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
 
-// ── Unauthorized handler ───────────────────────────────────────────────────────────────────────────
+// ── Unauthorized handler ────────────────────────────────────────────────────────────────────────────────────
 
 let onUnauthorized: (() => void) | null = null;
 
@@ -8,7 +8,7 @@ export function setOnUnauthorized(fn: () => void) {
   onUnauthorized = fn;
 }
 
-// ── Token management ───────────────────────────────────────────────────────────────────────────────
+// ── Token management ─────────────────────────────────────────────────────────────────────────────────────
 
 const TOKEN_KEY = 'liveedit_token';
 
@@ -28,7 +28,7 @@ export function isAuthenticated(): boolean {
   return !!getToken();
 }
 
-// ── HTTP client ───────────────────────────────────────────────────────────────────────────────
+// ── HTTP client ────────────────────────────────────────────────────────────────────────────────────
 
 type RequestOptions = RequestInit & {
   silent401?: boolean;
@@ -71,11 +71,12 @@ async function request<T>(path: string, options?: RequestOptions): Promise<T> {
   return res.json();
 }
 
-// ── Types ───────────────────────────────────────────────────────────────────────────────────
+// ── Types ───────────────────────────────────────────────────────────────────────────────────────
 
 export interface User {
   id: string;
   email: string;
+  claudeMdUrl?: string | null;
 }
 
 export interface Project {
@@ -141,7 +142,7 @@ export interface SaveExplorationPayload {
   htmlSnapshot?: string;
 }
 
-// ── Widget / Snippet types ────────────────────────────────────────────────────────────────
+// ── Widget / Snippet types ────────────────────────────────────────────────────────
 
 export interface FileChangeDiff {
   path: string;
@@ -165,11 +166,11 @@ export interface WidgetInjectResult {
   filesChanged: string[];
 }
 
-// ── API ────────────────────────────────────────────────────────────────────────────────────
+// ── API ────────────────────────────────────────────────────────────────────────────────────────
 
 export const api = {
 
-  // ── Auth ─────────────────────────────────────────────────────────────────────────────
+  // ── Auth ────────────────────────────────────────────────────────────────────────────────
 
   auth: {
     register: (email: string, password: string) =>
@@ -198,9 +199,33 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ anthropicApiKey }),
       }),
+
+    uploadClaudeMd: async (file: File): Promise<{ url: string }> => {
+      const formData = new FormData();
+      formData.append('file', file);
+      const token = getToken();
+      const res = await fetch(`${BASE}/auth/claude-md`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      });
+      if (!res.ok) {
+        let errMsg = `HTTP ${res.status}`;
+        try {
+          const json = await res.json();
+          errMsg = json.message ?? json.error ?? errMsg;
+        } catch { /* keep status */ }
+        throw new Error(errMsg);
+      }
+      return res.json();
+    },
+
+    deleteClaudeMd: () =>
+      request<void>('/auth/claude-md', { method: 'DELETE' }),
   },
 
-  // ── Projects ─────────────────────────────────────────────────────────────────────────
+  // ── Projects ─────────────────────────────────────────────────────────────────────────────
 
   projects: {
     list: () => request<Project[]>('/projects'),
@@ -211,7 +236,7 @@ export const api = {
     resetSnippet: (id: string) => request<void>(`/projects/${id}/reset-snippet`, { method: 'POST' }),
   },
 
-  // ── Prompt ───────────────────────────────────────────────────────────────────────────
+  // ── Prompt ────────────────────────────────────────────────────────────────────────────────
 
   prompt: {
     send: (payload: {
@@ -221,7 +246,7 @@ export const api = {
     }) => request<PromptResult>('/prompt', { method: 'POST', body: JSON.stringify(payload) }),
   },
 
-  // ── Apply ────────────────────────────────────────────────────────────────────────────
+  // ── Apply ─────────────────────────────────────────────────────────────────────────────────
 
   apply: {
     submit: (payload: {
@@ -232,48 +257,42 @@ export const api = {
     }) => request<ApplyResult>('/apply', { method: 'POST', body: JSON.stringify(payload) }),
   },
 
-  // ── GitHub OAuth ─────────────────────────────────────────────────────────────────────
+  // ── GitHub OAuth ───────────────────────────────────────────────────────────────────────────
 
   github: {
-    // Pass projectId so the OAuth callback can link the token to the project automatically
     authorizeUrl: (projectId?: string) => {
       const base = `${BASE}/github/oauth/authorize`;
       return projectId ? `${base}?projectId=${encodeURIComponent(projectId)}` : base;
     },
   },
 
-  // ── Snippet / Widget ────────────────────────────────────────────────────────────────────
+  // ── Snippet / Widget ──────────────────────────────────────────────────────────────────────
 
   snippet: {
-    // Step A — Generate widget JS only (~4s)
     generateWidget: (projectId: string) =>
       request<{ widgetCode: string; scriptTag: string }>('/snippet/generate-widget', {
         method: 'POST',
         body: JSON.stringify({ projectId }),
       }),
 
-    // Step B — Inject scriptTag into repo files (~4s)
     injectWidget: (projectId: string, scriptTag: string) =>
       request<WidgetPreviewResult>('/snippet/inject-widget', {
         method: 'POST',
         body: JSON.stringify({ projectId, scriptTag }),
       }),
 
-    // Legacy single-call preview (kept for reference)
     preview: (projectId: string, cdnUrl?: string) =>
       request<WidgetPreviewResult>('/snippet/preview', {
         method: 'POST',
         body: JSON.stringify({ projectId, ...(cdnUrl ? { cdnUrl } : {}) }),
       }),
 
-    // Create PR after user approves — sends pre-generated files, no Claude call
     applyPr: (projectId: string, files: { path: string; content: string; description: string }[]) =>
       request<WidgetInjectResult>('/snippet/apply-pr', {
         method: 'POST',
         body: JSON.stringify({ projectId, files }),
       }),
 
-    // Legacy inject (kept for reference)
     inject: (projectId: string, cdnUrl?: string) =>
       request<WidgetInjectResult>('/snippet/inject', {
         method: 'POST',
@@ -281,7 +300,7 @@ export const api = {
       }),
   },
 
-  // ── Explorations ─────────────────────────────────────────────────────────────────────
+  // ── Explorations ─────────────────────────────────────────────────────────────────────────
 
   explorations: {
     save: (data: SaveExplorationPayload) =>
