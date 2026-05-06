@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { LogOut } from 'lucide-react';
 import { Layout, PageHeader } from '../components/layout';
 import { Card, Input, Button, Toast } from '../components/ui';
@@ -11,6 +11,12 @@ export default function SettingsPage() {
 
   const [apiKey, setApiKey] = useState('');
   const [savingKey, setSavingKey] = useState(false);
+
+  const [claudeMdUrl, setClaudeMdUrl] = useState<string | null>(user?.claudeMdUrl ?? null);
+  const [uploadingMd, setUploadingMd] = useState(false);
+  const [removingMd, setRemovingMd] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const handleSaveApiKey = async () => {
@@ -34,6 +40,39 @@ export default function SettingsPage() {
 
   const handleConnectGitHub = () => {
     window.location.href = api.github.authorizeUrl();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.md')) {
+      setToast({ message: 'Only .md files are allowed', type: 'error' });
+      return;
+    }
+    setUploadingMd(true);
+    try {
+      const { url } = await api.auth.uploadClaudeMd(file);
+      setClaudeMdUrl(url);
+      setToast({ message: 'CLAUDE.md uploaded successfully', type: 'success' });
+    } catch (err) {
+      setToast({ message: (err as Error).message, type: 'error' });
+    } finally {
+      setUploadingMd(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveClaudeMd = async () => {
+    setRemovingMd(true);
+    try {
+      await api.auth.deleteClaudeMd();
+      setClaudeMdUrl(null);
+      setToast({ message: 'CLAUDE.md removed', type: 'success' });
+    } catch (err) {
+      setToast({ message: (err as Error).message, type: 'error' });
+    } finally {
+      setRemovingMd(false);
+    }
   };
 
   return (
@@ -80,6 +119,47 @@ export default function SettingsPage() {
               Save
             </Button>
           </div>
+        </Card>
+
+        {/* CLAUDE.md Instructions */}
+        <Card style={{ padding: 20 }}>
+          <h2 style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Claude Instructions (CLAUDE.md)</h2>
+          <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 14 }}>
+            Upload a <code style={{ fontFamily: 'monospace', fontSize: 11 }}>CLAUDE.md</code> file
+            to give the AI custom instructions that will be followed in every session.
+            Max size: 500 KB.
+          </p>
+
+          {claudeMdUrl ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12,
+              padding: '8px 12px', borderRadius: 6, background: 'var(--bg-secondary, #f4f4f5)' }}>
+              <span style={{ fontSize: 12, color: 'var(--text-primary)', flex: 1 }}>
+                ✅ CLAUDE.md carregado
+              </span>
+              <Button variant="danger" onClick={handleRemoveClaudeMd} loading={removingMd}>
+                Remove
+              </Button>
+            </div>
+          ) : (
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 12 }}>
+              No file uploaded yet.
+            </p>
+          )}
+
+          <input
+            type="file"
+            accept=".md"
+            ref={fileInputRef}
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+          />
+          <Button
+            variant="primary"
+            onClick={() => fileInputRef.current?.click()}
+            loading={uploadingMd}
+          >
+            {claudeMdUrl ? 'Replace file' : 'Upload .md file'}
+          </Button>
         </Card>
 
         {/* GitHub OAuth */}
